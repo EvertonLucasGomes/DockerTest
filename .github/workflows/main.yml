@@ -18,7 +18,7 @@ jobs:
            sudo pip3 install virtualenv
            sudo python3 -m venv venv
            source venv/bin/activate
-           sudo pip3 install django djangorestframework psycopg2 django-cors-header -y
+           sudo pip3 install django djangorestframework psycopg2 django-cors-headers
       
       - name: Testes
         run: |
