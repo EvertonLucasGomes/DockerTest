@@ -1,0 +1,31 @@
+name: CICD
+on:
+  push: 
+    branches: [main]
+  workflow_dispatch: 
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Realiza a Build
+        run: |
+           npm install @quasar/cli
+           npm install
+           sudo apt-get update
+           sudo apt-get install python3-pip python3-venv python3-dev libpq-dev postgresql postgresql-contrib -y
+           sudo pip3 install virtualenv
+           sudo python3 -m venv venv
+           source venv/bin/activate
+           sudo pip3 install django djangorestframework psycopg2 django-cors-headers
+      
+      - name: Testes
+        run: |
+          cd api
+          python manage.py test
+          cd ../client
+          npm run test:unit
+          
+    
+    
