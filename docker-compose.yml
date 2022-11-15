@@ -1,0 +1,52 @@
+version: "3.7"
+services:
+  postgres:
+    image: postgres:12.2
+    container_name: postgres
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: myuser
+      POSTGRES_DB: myproject
+      POSTGRES_HOST: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data/
+    restart: always
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+
+  apidjango:
+    build: ./api/
+    container_name: ApiDjango
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: myuser
+      POSTGRES_DB: myproject
+      POSTGRES_PORT: 5432
+    ports:
+      - 8000:8000
+    command: sh -c "export PGPASSWORD=password; psql -U myuser myproject -p 5432 -h 172.23.0.2 && CREATE DATABASE myproject; CREATE USER myuser WITH PASSWORD 'password';  GRANT ALL PRIVILEGES ON DATABASE myproject TO myuser;  ALTER USER myuser CREATEDB; \q ; python manage.py migrate && python manage.py test && python manage.py runserver"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: always
+    networks:
+      - backend
+
+  clientnode:
+    build: ./client/
+    container_name: ClientNode
+    command: sh -c "npm install -g @quasar/cli  && quasar dev"
+    ports:
+      - 8080:8080
+    restart: always
+    depends_on:
+      - apidjango
+
+networks:
+  backend:
+    driver: bridge
