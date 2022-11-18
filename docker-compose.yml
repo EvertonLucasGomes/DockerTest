@@ -4,49 +4,46 @@ services:
     image: postgres:12.2
     container_name: postgres
     environment:
-      POSTGRES_PASSWORD: password
-      POSTGRES_USER: myuser
-      POSTGRES_DB: myproject
-      POSTGRES_HOST: postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=myproject
+      - APP_DB_USER=postgres
+      - APP_DB_PASS=password
+      - APP_DB_NAME=myproject
     ports:
       - 5432:5432
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
-      - ./postgres_data:/var/lib/postgresql/data/
+      - ./db:/docker-entrypoint-initdb.d/
     restart: always
     networks:
-      - backend
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      - app-network
 
   apidjango:
     build: ./api/
     container_name: ApiDjango
-    environment:
-      POSTGRES_PASSWORD: password
-      POSTGRES_USER: myuser
-      POSTGRES_DB: myproject
-      POSTGRES_PORT: 5432
     ports:
-      - 8000:8000
-    command: sh -c "export PGPASSWORD=password; psql -U myuser myproject -p 5432 -h 172.23.0.2 && CREATE DATABASE myproject; CREATE USER myuser WITH PASSWORD 'password';  GRANT ALL PRIVILEGES ON DATABASE myproject TO myuser;  ALTER USER myuser CREATEDB; \q ; python manage.py migrate && python manage.py test && python manage.py runserver"
+      - 8080:8080
+    command: sh -c "python ../api/manage.py migrate && python manage.py test && python ../api/manage.py runserver"
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     restart: always
     networks:
-      - backend
+      - app-network
 
   clientnode:
     build: ./client/
     container_name: ClientNode
     command: sh -c "npm install -g @quasar/cli  && quasar dev"
     ports:
-      - 8080:8080
+      - 8000:8000
     restart: always
     depends_on:
       - apidjango
+    networks:
+      - app-network
 
+volumes:
+  postgres:
 networks:
-  backend:
+  app-network:
     driver: bridge

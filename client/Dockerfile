@@ -7,4 +7,4 @@ RUN npm install @quasar/cli
 RUN npm install
 COPY . .
 
-EXPOSE 8080
+EXPOSE 8000

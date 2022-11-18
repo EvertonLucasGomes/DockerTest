@@ -15,4 +15,4 @@ RUN . venv/bin/activate
 # Install packages
 RUN pip3 install django djangorestframework psycopg2 django-cors-headers
 
-EXPOSE 8000
+EXPOSE 8080
