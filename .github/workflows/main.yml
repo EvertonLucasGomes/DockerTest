@@ -26,7 +26,7 @@ jobs:
       
       - name: Testes
         run: |
-          cd api
+          cd ../api
           #python manage.py test
           cd ../client
           npm run test:unit
